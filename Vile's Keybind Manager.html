@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vile's Keybind Manager v27.0</title>
+    <style>
+        /* 1. RESET & VARIABLES */
+        * { box-sizing: border-box; }
+
+        :root {
+            /* --- THEME: SILICON PRO (Deep Navy & Software Blue) --- */
+            --bg-color: #0d1117;       /* Deepest Navy/Black */
+            --key-bg: #161b22;         /* Dimmed Navy */
+            --key-bg-dark: #090c10;    /* Darker contrast for special keys */
+            --key-border: #30363d;     /* Subtle blue-grey border */
+            --text-base: #8b949e;      /* Muted slate text */
+
+            /* --- PALETTE --- */
+            --luxury-blue: #58a6ff;    /* Electric Professional Blue */
+            --luxury-red: #f85149;     /* Soft Urgent Red */
+
+            /* --- MODIFIERS (IDE Syntax Palette) --- */
+            --text-main: #e6edf3;      /* High contrast white */
+            --text-shift: var(--luxury-blue); 
+            --text-ctrl: #7ee787;      
+            --text-alt: #d29922;       
+            
+            /* TABS */
+            --tab-active-bg: #161b22;
+            --tab-hover: #21262d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #e6edf3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* TIGHTER VERTICAL PADDING */
+            padding: 10px 30px; 
+            margin: 0;
+            overflow-y: auto; 
+            height: 100vh;
+        }
+
+        h1 { 
+            margin-top: 10px; 
+            color: var(--text-base); 
+            font-size: 13px; 
+            margin-bottom: 10px; /* REDUCED MARGIN */
+            letter-spacing: 4px; 
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* --- TABS --- */
+        .tab-bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 5px; /* TIGHTER MARGIN */
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .tab {
+            padding: 6px 20px;
+            background-color: transparent;
+            color: var(--text-base);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab:hover { background-color: var(--tab-hover); color: var(--text-main); }
+        
+        .tab.active { 
+            background-color: var(--tab-active-bg); 
+            color: var(--text-main);
+            border: 1px solid var(--key-border);
+            border-bottom: 2px solid var(--luxury-blue); 
+        }
+
+        .tab-controls { display: flex; gap: 8px; }
+
+        /* --- BUTTONS (Matte Finish) --- */
+        button {
+            padding: 9px 18px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: var(--text-main);
+            background-color: #21262d; 
+            
+            border: 1px solid rgba(240, 246, 252, 0.1); 
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover { 
+            background-color: #30363d; 
+            border-color: #8b949e; 
+        }
+        
+        /* BLUE BUTTONS (Create/Clone) */
+        .btn-create { 
+            background-color: #1f2937; 
+            color: var(--luxury-blue); 
+            border: 1px solid rgba(88, 166, 255, 0.2);
+        }
+        .btn-create:hover { 
+            background-color: #1f2937; 
+            color: #fff; 
+            border-color: var(--luxury-blue); 
+            box-shadow: 0 0 8px rgba(88, 166, 255, 0.2);
+        }
+
+        /* RED BUTTONS (Delete/Clear) */
+        .btn-danger { 
+            background-color: #291d1d; 
+            color: var(--luxury-red);  
+            border: 1px solid rgba(248, 81, 73, 0.2);
+        }
+        .btn-danger:hover { 
+            background-color: #3d1f1f; 
+            color: #fff; 
+            border-color: var(--luxury-red); 
+            box-shadow: 0 0 8px rgba(248, 81, 73, 0.2);
+        }
+
+        .utility-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px; /* REDUCED MARGIN */
+            border-top: 1px solid var(--key-border);
+            padding-top: 15px;
+        }
+
+        /* --- KEYBOARD CONTAINER (Enhanced Depth & NO SCALING) --- */
+        .keyboard-container {
+            display: flex;
+            flex-direction: column;
+            /* REDUCED GAP BETWEEN ROWS FOR COMPACTNESS */
+            gap: 6px; 
+            background: #161b22; 
+            /* REDUCED PADDING INSIDE CONTAINER */
+            padding: 20px; 
+            border-radius: 16px;
+            align-items: flex-start;
+            border: 1px solid var(--key-border);
+            
+            /* PROFESSIONAL SHADOW LAYERING */
+            box-shadow: 
+                0 0 0 1px rgba(0,0,0,0.4),            
+                0 24px 48px -12px rgba(0, 0, 0, 0.8); 
+            
+            width: max-content; 
+            max-width: 98vw;
+            
+            /* SCALING REMOVED: KEYBOARD IS RENDERED AT 100% SIZE */
+            transform: none; 
+            transform-origin: unset;
+            margin-bottom: 0;
+        }
+
+        .row { 
+            display: flex; 
+            /* REDUCED GAP BETWEEN KEYS FOR COMPACTNESS */
+            gap: 6px; 
+            width: 100%; 
+        }
+
+        .f-group { display: flex; gap: 6px; } /* REDUCED F-KEY GROUP GAP */
+        
+        .mouse-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 40px; /* REDUCED MOUSE GROUP GAP */
+        }
+        
+        .mouse-group { display: flex; gap: 6px; align-items: center; }
+        
+        .mouse-label {
+            color: var(--text-base);
+            font-size: 10px;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* --- KEY SIZING (RESTORED TO ORIGINAL SIZE) --- */
+        .key {
+            width: 136px;
+            height: 140px;
+            background-color: var(--key-bg);
+            border: 1px solid var(--key-border);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+            position: relative;
+            transition: border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .key:hover { 
+            background-color: #21262d; 
+            border-color: var(--text-base);
+            z-index: 10;
+        }
+
+        .key-dark { background-color: var(--key-bg-dark); border-color: #21262d; }
+        .key-dark:hover { background-color: #0d1117; }
+
+        /* Custom Widths (Kept Original) */
+        .w-esc { width: 136px; } 
+        .w-bksp { width: 280px; } 
+        .w-tab { width: 208px; } 
+        .w-slash { width: 208px; } 
+        .w-caps { width: 244px; } 
+        .w-enter { width: 316px; } 
+        .w-shift { width: 316px; } 
+        .w-shift-r { width: 388px; } 
+        .w-mouse { width: 170px; } 
+
+        /* --- CONTENT STYLING --- */
+        .key-label { 
+            font-size: 12px; 
+            color: var(--text-base); 
+            font-weight: 700;
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            pointer-events: none;
+        }
+
+        .action-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding-top: 26px; 
+            gap: 1px;
+        }
+
+        input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            text-align: center;
+            outline: none;
+            font-weight: 600;
+            font-family: inherit;
+            padding: 0;
+            margin: 0;
+            transition: opacity 0.2s;
+        }
+
+        .action-main { 
+            font-size: 15px; 
+            color: var(--text-main); 
+            height: 32px; 
+            letter-spacing: 0.5px; 
+        }
+
+        .action-mod { font-size: 12px; height: 22px; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+        
+        /* THE COLORS APPLIED */
+        .action-shift { color: var(--text-shift); }
+        .action-ctrl { color: var(--text-ctrl); }
+        .action-alt { color: var(--text-alt); }
+
+        ::placeholder { color: var(--text-base); opacity: 0; transition: opacity 0.2s; font-weight: normal; font-size: 11px; }
+        .key:hover input::placeholder { opacity: 1; }
+        input:focus::placeholder { opacity: 0.5; }
+        
+        .key:hover .action-mod { border-bottom: 1px dashed var(--key-border); }
+        .action-alt { border-bottom: none !important; }
+
+        .mouse-header {
+            margin-top: 25px;
+            color: var(--text-base);
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 3px;
+            width: 100%;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>VILE'S KEYBIND MANAGER v27.0</h1>
+
+    <div class="tab-bar-container">
+        <div class="tabs" id="tab-list"></div>
+        <div class="tab-controls">
+            <button class="btn-create" onclick="createNewProfile()">+ New Profile</button>
+            <button class="btn-create" onclick="cloneCurrentProfile()">+ Clone Active</button>
+            
+            <button onclick="renameCurrentProfile()">Rename</button>
+            
+            <button class="btn-danger" onclick="deleteCurrentProfile()">Delete</button>
+        </div>
+    </div>
+
+    <div class="utility-bar">
+        <button onclick="exportJSON()">Save to File</button>
+        <button onclick="document.getElementById('file-input').click()">Load from File</button>
+        <input type="file" id="file-input" style="display: none;" onchange="importJSON(this)">
+        <span style="border-right: 1px solid var(--key-border); margin: 0 5px;"></span>
+        <button class="btn-danger" onclick="clearBoard()">Clear Board</button>
+    </div>
+
+    <div class="keyboard-container" id="keyboard"></div>
+
+    <script>
+        // --- DATA ---
+        let appState = {
+            activeId: null,
+            order: [],
+            profiles: {}
+        };
+
+        // --- RENDERER ---
+        function createKey(label, widthClass, isDark) {
+            const darkClass = isDark ? 'key-dark' : '';
+            return `
+                <div class="key ${widthClass || ''} ${darkClass}" id="key-${label}">
+                    <div class="key-label">${label}</div>
+                    <div class="action-container">
+                        <input type="text" class="action-main" oninput="handleInput()">
+                        <input type="text" class="action-mod action-shift" placeholder="Shift" oninput="handleInput()">
+                        <input type="text" class="action-mod action-ctrl" placeholder="Ctrl" oninput="handleInput()">
+                        <input type="text" class="action-mod action-alt" placeholder="Alt" oninput="handleInput()">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderKeyboard() {
+            const container = document.getElementById('keyboard');
+            let html = '';
+            
+            // F-Keys
+            html += '<div class="row" style="margin-bottom:15px; justify-content:space-between;">';
+            html += '<div class="f-group">';
+            html += createKey('ESC', 'w-esc', true);
+            html += '</div>';
+            html += '<div class="f-group">';
+            ['F1','F2','F3','F4'].forEach(k => html += createKey(k));
+            html += '</div>';
+            html += '<div class="f-group">';
+            ['F5','F6','F7','F8'].forEach(k => html += createKey(k));
+            html += '</div>';
+            html += '<div class="f-group">';
+            ['F9','F10','F11','F12'].forEach(k => html += createKey(k));
+            html += '</div>';
+            html += '</div>';
+
+            // Numbers
+            html += '<div class="row">';
+            ['`','1','2','3','4','5','6','7','8','9','0','-','='].forEach(k => html += createKey(k));
+            html += createKey('BKSP', 'w-bksp', true);
+            html += '</div>';
+
+            // QWERTY
+            html += '<div class="row">';
+            html += createKey('TAB', 'w-tab', false); 
+            ['Q','W','E','R','T','Y','U','I','O','P','[',']'].forEach(k => html += createKey(k));
+            html += createKey('\\', 'w-slash', false);
+            html += '</div>';
+
+            // ASDF
+            html += '<div class="row">';
+            html += createKey('CAPS', 'w-caps', true);
+            ['A','S','D','F','G','H','J','K','L',';','\''].forEach(k => html += createKey(k));
+            html += createKey('ENTER', 'w-enter', true);
+            html += '</div>';
+
+            // ZXCV
+            html += '<div class="row">';
+            html += createKey('SHIFT', 'w-shift', true);
+            ['Z','X','C','V','B','N','M',',','.','/'].forEach(k => html += createKey(k));
+            html += createKey('SHIFT', 'w-shift-r', true);
+            html += '</div>';
+
+            // Mouse
+            html += '<div class="mouse-header">--- MOUSE ---</div>';
+            html += '<div class="mouse-row">';
+            
+            // Thumb
+            html += '<div class="mouse-group">';
+            html += '<div class="mouse-label">THUMB</div>';
+            html += createKey('M5', 'w-mouse');
+            html += createKey('M4', 'w-mouse');
+            html += '</div>';
+
+            // Wheel
+            html += '<div class="mouse-group">';
+            html += createKey('MW_UP', 'w-mouse');
+            html += createKey('M3', 'w-mouse'); 
+            html += createKey('MW_DN', 'w-mouse');
+            html += '<div class="mouse-label" style="transform:rotate(180deg)">WHEEL</div>';
+            html += '</div>';
+            
+            html += '</div>';
+
+            container.innerHTML = html;
+            
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') this.blur();
+                });
+            });
+        }
+
+        // --- LOGIC ---
+
+        function renderTabs() {
+            const container = document.getElementById('tab-list');
+            container.innerHTML = '';
+            appState.order.forEach(id => {
+                const profile = appState.profiles[id];
+                const el = document.createElement('div');
+                el.className = `tab ${id === appState.activeId ? 'active' : ''}`;
+                el.innerText = profile.name;
+                el.onclick = () => switchTab(id);
+                el.ondblclick = () => renameProfile(id); 
+                container.appendChild(el);
+            });
+        }
+
+        function switchTab(id) {
+            if (appState.activeId && appState.profiles[appState.activeId]) scrapeBoardToState();
+            appState.activeId = id;
+            renderTabs();
+            populateBoardFromState();
+            persist();
+        }
+
+        function createNewProfile(nameOverride) {
+            const name = nameOverride || prompt("New Profile Name:", "New Profile");
+            if (!name) return;
+            if (appState.activeId && appState.profiles[appState.activeId]) scrapeBoardToState();
+            
+            const newId = 'p_' + Date.now();
+            appState.profiles[newId] = { name: name, data: {} };
+            appState.order.push(newId);
+            switchTab(newId);
+        }
+
+        function cloneCurrentProfile() {
+            if (appState.activeId && appState.profiles[appState.activeId]) scrapeBoardToState();
+            const current = appState.profiles[appState.activeId];
+            const newName = prompt("Name for Clone:", current.name + " (Copy)");
+            if (!newName) return;
+
+            const newId = 'p_' + Date.now();
+            appState.profiles[newId] = { name: newName, data: JSON.parse(JSON.stringify(current.data)) };
+            appState.order.push(newId);
+            switchTab(newId);
+        }
+
+        function renameCurrentProfile() {
+            const current = appState.profiles[appState.activeId];
+            const newName = prompt("Rename Profile:", current.name);
+            if (newName) {
+                current.name = newName;
+                renderTabs();
+                persist();
+            }
+        }
+
+        function deleteCurrentProfile() {
+            if (appState.order.length <= 1) {
+                alert("You must have at least one profile.");
+                return;
+            }
+            if (!confirm(`Delete profile "${appState.profiles[appState.activeId].name}"?`)) return;
+
+            const oldId = appState.activeId;
+            const idx = appState.order.indexOf(oldId);
+            delete appState.profiles[oldId];
+            appState.order.splice(idx, 1);
+            appState.activeId = appState.order[Math.max(0, idx - 1)];
+            
+            renderTabs();
+            populateBoardFromState();
+            persist();
+        }
+
+        function scrapeBoardToState() {
+            if (!appState.activeId || !appState.profiles[appState.activeId]) return;
+            const data = {};
+            document.querySelectorAll('.key').forEach(keyEl => {
+                const id = keyEl.id.replace('key-', '');
+                data[id] = {
+                    main: keyEl.querySelector('.action-main').value,
+                    shift: keyEl.querySelector('.action-shift').value,
+                    ctrl: keyEl.querySelector('.action-ctrl').value,
+                    alt: keyEl.querySelector('.action-alt').value
+                };
+            });
+            appState.profiles[appState.activeId].data = data;
+        }
+
+        function populateBoardFromState() {
+            if (!appState.activeId || !appState.profiles[appState.activeId]) return;
+            const data = appState.profiles[appState.activeId].data || {};
+            document.querySelectorAll('input').forEach(el => el.value = '');
+
+            for (const [key, actions] of Object.entries(data)) {
+                const keyEl = document.getElementById(`key-${key}`);
+                if (keyEl && actions) {
+                    keyEl.querySelector('.action-main').value = actions.main || "";
+                    keyEl.querySelector('.action-shift').value = actions.shift || "";
+                    keyEl.querySelector('.action-ctrl').value = actions.ctrl || "";
+                    keyEl.querySelector('.action-alt').value = actions.alt || "";
+                    
+                    const mainText = (actions.main || "").toUpperCase();
+                    if (mainText.includes("MOVE") || mainText.includes("STRAFE") || mainText.includes("WALK")) {
+                        keyEl.style.backgroundColor = "#222";
+                    } else {
+                        if (!keyEl.classList.contains('key-dark')) keyEl.style.backgroundColor = "";
+                    }
+                }
+            }
+        }
+
+        function handleInput() {
+            scrapeBoardToState();
+            persist();
+        }
+
+        function persist() {
+            // UPDATED STORAGE KEY FOR V27
+            localStorage.setItem('vile_manager_v27_data', JSON.stringify(appState));
+        }
+
+        function init() {
+            renderKeyboard();
+            // UPDATED STORAGE KEY FOR V27
+            const storedData = localStorage.getItem('vile_manager_v27_data');
+            
+            if (storedData) {
+                try {
+                    appState = JSON.parse(storedData);
+                } catch(e) {}
+            } else {
+                const pid = 'p_default';
+                appState.profiles[pid] = { name: "New Profile", data: {} };
+                appState.order = [pid];
+                appState.activeId = pid;
+            }
+
+            if (!appState.profiles[appState.activeId]) appState.activeId = appState.order[0];
+            renderTabs();
+            populateBoardFromState();
+        }
+
+        function clearBoard() {
+            if(confirm("Clear current board keys?")) {
+                document.querySelectorAll('input').forEach(el => el.value = '');
+                scrapeBoardToState();
+                persist();
+            }
+        }
+
+        function exportJSON() {
+            scrapeBoardToState(); 
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const dlNode = document.createElement('a');
+            dlNode.setAttribute("href", dataStr);
+            // UPDATED FILENAME FOR V27
+            dlNode.setAttribute("download", "vile_keybinds_v27.json");
+            document.body.appendChild(dlNode);
+            dlNode.click();
+            dlNode.remove();
+        }
+
+        function importJSON(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.profiles || !imported.order) throw new Error("Invalid format");
+                    if(confirm("Replace current data with imported file?")) {
+                        appState = imported;
+                        renderTabs();
+                        populateBoardFromState();
+                        persist();
+                    }
+                } catch(err) { alert("Error reading file"); }
+            };
+            reader.readAsText(file);
+        }
+
+        init();
+    </script>
+</body>
+</html>
